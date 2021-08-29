@@ -32,10 +32,13 @@ code genesis
 ```
 
 - Ensure your Docker daemon is running and listening on `/var/run/docker.sock`
+- Ensure you have the necessary environment variables to run this application set in your local environment; they will be used transferred to the remote container environment. You can see which are required in the `.devcontainer/devcontainer.json` file under the `remoteEnv` key.
 - In the bottom-left corner of the VS Code window, click the highlighted "><" button (or navigate to the Remote Containers extension).
 - From the dropdown, select "Remote Containers: Reopen in Container"
 
 That's it.
+
+When you enter the remote VS Code environment for the first time, a pop-up will appear in the corner indicating that you should install some of the go binaries required for tooling (e.g. gopls, dlv-dap - a Go debugging server). Click "Install", and these binaries will be persisted for all future spin-ups via a docker-compose volume for the environment.
 
 ## Development Details
 

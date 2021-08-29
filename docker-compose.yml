@@ -1,0 +1,15 @@
+version: '3.7'
+
+volumes:
+  go-tools:
+    driver: local
+
+services:
+  tugboat:
+    build:
+      context: .
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - ENV=dev
+    volumes:
+      - go-tools:/go/bin
