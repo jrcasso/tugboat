@@ -10,6 +10,7 @@ services:
       context: .
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_ORGANIZATION=${GITHUB_ORGANIZATION}
       - ENV=dev
     volumes:
       - go-tools:/go/bin
