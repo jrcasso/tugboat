@@ -9,8 +9,10 @@ services:
     build:
       context: .
     environment:
+      - ENV=dev
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - GITHUB_ORGANIZATION=${GITHUB_ORGANIZATION}
-      - ENV=dev
+      - KUBECONFIG=/root/.kube/config
     volumes:
       - go-tools:/go/bin
+      - ${KUBECONFIG}:/root/.kube/config:ro
