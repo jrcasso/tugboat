@@ -14,18 +14,6 @@ var requiredEnvs = [...]string{
 	"GITHUB_ORGANIZATION",
 }
 
-func GetRepository(ctx context.Context, client github.Client) {
-
-}
-
-func DeleteRepository(ctx context.Context, client github.Client, name string) {
-	_, err := client.Repositories.Delete(ctx, os.Getenv("GITHUB_ORGANIZATION"), name)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Infof("Successfully deleted repo: %v\n", name)
-}
-
 func CreateClient(ctx context.Context) github.Client {
 	validateEnvironment()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
@@ -43,7 +31,26 @@ func CreateRepository(ctx context.Context, client github.Client, name string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Infof("Successfully created new repo: %v\n", repo.GetName())
+	log.Infof("Successfully created repo: %v", repo.GetName())
+}
+
+func DeleteRepository(ctx context.Context, client github.Client, name string) {
+	_, err := client.Repositories.Delete(ctx, os.Getenv("GITHUB_ORGANIZATION"), name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("Successfully deleted repo: %v", name)
+}
+
+func GetOrgRepositories(ctx context.Context, client github.Client) []*github.Repository {
+	repos, _, err := client.Repositories.ListByOrg(ctx, os.Getenv("GITHUB_ORGANIZATION"), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for i := 0; i < len(repos); i++ {
+		log.Debugf("Found repo: %+v", *repos[i].Name)
+	}
+	return repos
 }
 
 func validateEnvironment() {
