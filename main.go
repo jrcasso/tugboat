@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jrcasso/tugboat/providers/github"
+	"github.com/jrcasso/tugboat/providers/kubernetes"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -15,20 +16,29 @@ import (
 const SERVICE_DIR = "services"
 
 type Service struct {
-	Name string `yaml:"name"`
+	Name      string `yaml:"name"`
+	Namespace bool   `yaml:"Namespace"`
+	Template  string `yaml:"template,omitempty"`
 }
 
 func main() {
 	initializeLogging()
 	services := loadServiceConfigs()
 	ctx := context.Background()
-	client := github.CreateClient(ctx)
+
+	githubClient := github.CreateClient(ctx)
+	k8sClient := kubernetes.CreateClient()
 
 	for _, service := range services {
-		github.CreateRepository(ctx, client, service.Name)
-		github.GetOrgRepositories(ctx, client)
+		github.CreateRepository(ctx, githubClient, service.Name)
+		github.GetOrgRepositories(ctx, githubClient)
 		time.Sleep(1)
-		github.DeleteRepository(ctx, client, service.Name)
+		github.DeleteRepository(ctx, githubClient, service.Name)
+	}
+
+	namespaces := kubernetes.GetNamespaces(*k8sClient)
+	for _, namespace := range namespaces.Items {
+		log.Debugf("Found namespace: %+v", namespace.Name)
 	}
 }
 
