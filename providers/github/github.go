@@ -14,6 +14,24 @@ var requiredEnvs = [...]string{
 	"GITHUB_ORGANIZATION",
 }
 
+type GithubProvider struct {
+	Client  *github.Client
+	Context *context.Context
+}
+
+func (g GithubProvider) Create(name string) {
+	repo := &github.Repository{
+		Name:        github.String(name),
+		Private:     github.Bool(true),
+		Description: github.String("Test repository"),
+	}
+	repo, _, err := g.Client.Repositories.Create(*g.Context, os.Getenv("GITHUB_ORGANIZATION"), repo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("Successfully created repo: %v", repo.GetName())
+}
+
 func CreateClient(ctx context.Context) github.Client {
 	validateEnvironment()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})

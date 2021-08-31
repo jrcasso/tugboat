@@ -21,6 +21,10 @@ type Service struct {
 	Template  string `yaml:"template,omitempty"`
 }
 
+type Provider interface {
+	Create(name string)
+}
+
 func main() {
 	initializeLogging()
 	services := loadServiceConfigs()
@@ -29,11 +33,20 @@ func main() {
 	githubClient := github.CreateClient(ctx)
 	k8sClient := kubernetes.CreateClient()
 
-	for _, service := range services {
-		github.CreateRepository(ctx, githubClient, service.Name)
-		github.GetOrgRepositories(ctx, githubClient)
-		time.Sleep(1)
-		github.DeleteRepository(ctx, githubClient, service.Name)
+	providers := []Provider{
+		github.GithubProvider{
+			Client:  &githubClient,
+			Context: &ctx,
+		},
+	}
+
+	for _, provider := range providers {
+		for _, service := range services {
+			provider.Create(service.Name)
+			github.GetOrgRepositories(ctx, githubClient)
+			time.Sleep(1)
+			github.DeleteRepository(ctx, githubClient, service.Name)
+		}
 	}
 
 	namespaces := kubernetes.GetNamespaces(*k8sClient)
