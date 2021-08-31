@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -37,6 +38,16 @@ func LoadServices(dir string) []Service {
 	for _, file := range files {
 		config := processConfig(fmt.Sprintf("./%+v/%+v", dir, file.Name()))
 		log.Debugf("Found configuration: %+v", config)
+
+		matched, err := regexp.MatchString("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", config.Name)
+		if err != nil {
+			log.Fatalf("Failed to enforce regex: %+v", err)
+		}
+		if !matched {
+			log.Errorf("Skipping configuration with non-compliant DNS name: %+v", config.Name)
+			continue
+		}
+
 		configs = append(configs, config)
 	}
 

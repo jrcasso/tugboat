@@ -22,6 +22,10 @@ func main() {
 	k8sClient := kubernetes.CreateClient()
 
 	providers := []tugboat.Provider{
+		kubernetes.KubernetesProvider{
+			Client:  k8sClient,
+			Context: &ctx,
+		},
 		github.GithubProvider{
 			Client:  &githubClient,
 			Context: &ctx,
@@ -35,11 +39,6 @@ func main() {
 			time.Sleep(3)
 			provider.Delete(service.Name)
 		}
-	}
-
-	namespaces := kubernetes.GetNamespaces(*k8sClient)
-	for _, namespace := range namespaces.Items {
-		log.Debugf("Found namespace: %+v", namespace.Name)
 	}
 }
 

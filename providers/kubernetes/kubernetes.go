@@ -16,6 +16,40 @@ var requiredEnvs = [...]string{
 	"KUBECONFIG",
 }
 
+type KubernetesProvider struct {
+	Client  *kubernetes.Clientset
+	Context *context.Context
+}
+
+func (k KubernetesProvider) Create(name string) {
+	namespace := v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	_, err := k.Client.CoreV1().Namespaces().Create(context.TODO(), &namespace, metav1.CreateOptions{})
+	if err != nil {
+		log.Fatalf("Encountered error while creating namespace: %+v", err)
+	}
+	log.Infof("Successfully created namespace: %v", name)
+}
+
+func (k KubernetesProvider) Retrieve() interface{} {
+	namespaces, err := k.Client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		log.Fatalf("Encountered error while listing namespaces: %+v", err)
+	}
+	for _, namespace := range namespaces.Items {
+		log.Debugf("Found namespace: %+v", namespace.ObjectMeta.Name)
+	}
+
+	return namespaces
+}
+
+func (k KubernetesProvider) Delete(name string) {
+	err := k.Client.CoreV1().Namespaces().Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if err != nil {
+		log.Fatalf("Encountered error while listing namespaces: %+v", err)
+	}
+	log.Infof("Successfully deleted namespace: %v", name)
+}
+
 func CreateClient() *kubernetes.Clientset {
 	validateEnvironment()
 	config, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
@@ -28,15 +62,6 @@ func CreateClient() *kubernetes.Clientset {
 	}
 
 	return clientset
-}
-
-func GetNamespaces(clientset kubernetes.Clientset) *v1.NamespaceList {
-	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		log.Fatalf("Encountered error while listing namespaces: %+v", err)
-	}
-
-	return namespaces
 }
 
 func validateEnvironment() {
