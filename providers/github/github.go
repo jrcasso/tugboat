@@ -37,9 +37,10 @@ func (g GithubProvider) Retrieve() interface{} {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for i := 0; i < len(repos); i++ {
-		log.Debugf("Found repo: %+v", *repos[i].Name)
+	for _, repo := range repos {
+		log.Debugf("Found repo: %+v", *repo.Name)
 	}
+
 	return repos
 }
 
@@ -55,14 +56,15 @@ func CreateClient(ctx context.Context) github.Client {
 	validateEnvironment()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
 	tc := oauth2.NewClient(ctx, ts)
+
 	return *github.NewClient(tc)
 }
 
 func validateEnvironment() {
-	for i := 0; i < len(requiredEnvs); i++ {
-		var env = os.Getenv(requiredEnvs[i])
+	for _, env := range requiredEnvs {
+		var env = os.Getenv(env)
 		if env == "" {
-			log.Fatalf("Required environment variable not set: %v", requiredEnvs[i])
+			log.Fatalf("Required environment variable not set: %v", env)
 		}
 	}
 }
