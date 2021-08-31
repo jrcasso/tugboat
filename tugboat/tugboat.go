@@ -17,9 +17,9 @@ type Service struct {
 
 type Provider interface {
 	Create(name string)
-	// Retrieve()
+	Retrieve() interface{}
 	// Update()
-	// Delete()
+	Delete(name string)
 
 	// resolve()
 }

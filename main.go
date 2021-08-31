@@ -31,9 +31,9 @@ func main() {
 	for _, provider := range providers {
 		for _, service := range services {
 			provider.Create(service.Name)
-			github.GetOrgRepositories(ctx, githubClient)
+			provider.Retrieve()
 			time.Sleep(3)
-			github.DeleteRepository(ctx, githubClient, service.Name)
+			provider.Delete(service.Name)
 		}
 	}
 

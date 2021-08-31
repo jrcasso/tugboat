@@ -32,36 +32,8 @@ func (g GithubProvider) Create(name string) {
 	log.Infof("Successfully created repo: %v", repo.GetName())
 }
 
-func CreateClient(ctx context.Context) github.Client {
-	validateEnvironment()
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
-	tc := oauth2.NewClient(ctx, ts)
-	return *github.NewClient(tc)
-}
-
-func CreateRepository(ctx context.Context, client github.Client, name string) {
-	repo := &github.Repository{
-		Name:        github.String(name),
-		Private:     github.Bool(true),
-		Description: github.String("Test repository"),
-	}
-	repo, _, err := client.Repositories.Create(ctx, os.Getenv("GITHUB_ORGANIZATION"), repo)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Infof("Successfully created repo: %v", repo.GetName())
-}
-
-func DeleteRepository(ctx context.Context, client github.Client, name string) {
-	_, err := client.Repositories.Delete(ctx, os.Getenv("GITHUB_ORGANIZATION"), name)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Infof("Successfully deleted repo: %v", name)
-}
-
-func GetOrgRepositories(ctx context.Context, client github.Client) []*github.Repository {
-	repos, _, err := client.Repositories.ListByOrg(ctx, os.Getenv("GITHUB_ORGANIZATION"), nil)
+func (g GithubProvider) Retrieve() interface{} {
+	repos, _, err := g.Client.Repositories.ListByOrg(*g.Context, os.Getenv("GITHUB_ORGANIZATION"), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,6 +41,21 @@ func GetOrgRepositories(ctx context.Context, client github.Client) []*github.Rep
 		log.Debugf("Found repo: %+v", *repos[i].Name)
 	}
 	return repos
+}
+
+func (g GithubProvider) Delete(name string) {
+	_, err := g.Client.Repositories.Delete(*g.Context, os.Getenv("GITHUB_ORGANIZATION"), name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("Successfully deleted repo: %v", name)
+}
+
+func CreateClient(ctx context.Context) github.Client {
+	validateEnvironment()
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
+	tc := oauth2.NewClient(ctx, ts)
+	return *github.NewClient(tc)
 }
 
 func validateEnvironment() {
