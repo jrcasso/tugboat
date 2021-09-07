@@ -27,8 +27,13 @@ type Provider interface {
 	Retrieve() []string
 	// Update()
 	Delete(name string)
-	Execute(plan []ExecutionPlan)
 	Plan(services []Service) []ExecutionPlan
+}
+
+func Execute(plan []ExecutionPlan) {
+	for _, command := range plan {
+		command.Function(command.Arguments)
+	}
 }
 
 func LoadServices(dir string) []Service {
@@ -77,4 +82,22 @@ func processConfig(path string) Service {
 	}
 
 	return t
+}
+
+func SliceContains(s string, strSlice []string) bool {
+	for _, i := range strSlice {
+		if i == s {
+			return true
+		}
+	}
+	return false
+}
+
+func ValidateEnvironment(requiredEnvs []string) {
+	for _, env := range requiredEnvs {
+		env := os.Getenv(env)
+		if env == "" {
+			log.Fatalf("Required environment variable not set: %+v", env)
+		}
+	}
 }

@@ -55,12 +55,6 @@ func (g GithubProvider) Delete(name string) {
 	log.Infof("Successfully deleted repo: %v", name)
 }
 
-func (g GithubProvider) Execute(plan []tugboat.ExecutionPlan) {
-	for _, command := range plan {
-		command.Function(command.Arguments)
-	}
-}
-
 func (g GithubProvider) Plan(services []tugboat.Service) []tugboat.ExecutionPlan {
 	var repoExists bool
 	executionPlan := []tugboat.ExecutionPlan{}
@@ -74,11 +68,8 @@ func (g GithubProvider) Plan(services []tugboat.Service) []tugboat.ExecutionPlan
 			localRepo = service.Repo
 		}
 
-		for _, remoteRepo := range repos {
-			if localRepo == remoteRepo {
-				repoExists = true
-				break
-			}
+		if tugboat.SliceContains(localRepo, repos) {
+			repoExists = true
 		}
 
 		if !repoExists {
@@ -95,18 +86,9 @@ func (g GithubProvider) Plan(services []tugboat.Service) []tugboat.ExecutionPlan
 }
 
 func CreateClient(ctx context.Context) github.Client {
-	validateEnvironment()
+	tugboat.ValidateEnvironment(requiredEnvs[:])
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
 	tc := oauth2.NewClient(ctx, ts)
 
 	return *github.NewClient(tc)
-}
-
-func validateEnvironment() {
-	for _, env := range requiredEnvs {
-		var env = os.Getenv(env)
-		if env == "" {
-			log.Fatalf("Required environment variable not set: %v", env)
-		}
-	}
 }

@@ -53,12 +53,6 @@ func (k KubernetesProvider) Delete(name string) {
 	log.Infof("Successfully deleted namespace: %v", name)
 }
 
-func (k KubernetesProvider) Execute(plan []tugboat.ExecutionPlan) {
-	for _, command := range plan {
-		command.Function(command.Arguments)
-	}
-}
-
 // func (k KubernetesProvider) Plan(service tugboat.Service) []func(name string) {
 func (k KubernetesProvider) Plan(services []tugboat.Service) []tugboat.ExecutionPlan {
 	// executionPlan := []func(name string){}
@@ -66,6 +60,7 @@ func (k KubernetesProvider) Plan(services []tugboat.Service) []tugboat.Execution
 	executionPlan := []tugboat.ExecutionPlan{}
 	namespaces := k.Retrieve()
 
+	// Check if it should be created
 	for _, service := range services {
 		namespaceExists = false
 		localNamespace := service.Name
@@ -74,11 +69,8 @@ func (k KubernetesProvider) Plan(services []tugboat.Service) []tugboat.Execution
 			localNamespace = service.Namespace
 		}
 
-		for _, remoteNamespace := range namespaces {
-			if localNamespace == remoteNamespace {
-				namespaceExists = true
-				break
-			}
+		if tugboat.SliceContains(localNamespace, namespaces) {
+			namespaceExists = true
 		}
 
 		if !namespaceExists {
@@ -90,12 +82,11 @@ func (k KubernetesProvider) Plan(services []tugboat.Service) []tugboat.Execution
 				})
 		}
 	}
-
 	return executionPlan
 }
 
 func CreateClient() *kubernetes.Clientset {
-	validateEnvironment()
+	tugboat.ValidateEnvironment(requiredEnvs[:])
 	config, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
 	if err != nil {
 		log.Fatalf("Encountered error while parsing KUBECONFIG: %+v", err)
@@ -106,13 +97,4 @@ func CreateClient() *kubernetes.Clientset {
 	}
 
 	return clientset
-}
-
-func validateEnvironment() {
-	for i := 0; i < len(requiredEnvs); i++ {
-		var env = os.Getenv(requiredEnvs[i])
-		if env == "" {
-			log.Fatalf("Required environment variable not set: %+v", requiredEnvs[i])
-		}
-	}
 }

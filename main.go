@@ -36,7 +36,7 @@ func main() {
 		// Add concurrency
 		plan := provider.Plan(services)
 		log.Infof("Execution plan: %v", plan)
-		provider.Execute(plan)
+		tugboat.Execute(plan)
 	}
 
 	// Cleanup

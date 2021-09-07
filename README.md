@@ -12,6 +12,7 @@ Tugboat envdeavors to automate this process for a number of supported services.
 
 - The Tugboat approach is that of convention over configuration; a consistent set of sensible defaults across providers is used.
 - Conventions need not impact flexibility - defaults may be overridden for each provider.
+- Tugboat will currently not delete service depedency allocations as a matter of fault-tolerance and risk reduction.
 
 # Development Setup
 
