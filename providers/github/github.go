@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/google/go-github/github"
+	"github.com/jrcasso/tugboat/tugboat"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -32,16 +33,18 @@ func (g GithubProvider) Create(name string) {
 	log.Infof("Successfully created repo: %v", repo.GetName())
 }
 
-func (g GithubProvider) Retrieve() interface{} {
+func (g GithubProvider) Retrieve() []string {
+	repoNames := []string{}
 	repos, _, err := g.Client.Repositories.ListByOrg(*g.Context, os.Getenv("GITHUB_ORGANIZATION"), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, repo := range repos {
 		log.Debugf("Found repo: %+v", *repo.Name)
+		repoNames = append(repoNames, *repo.Name)
 	}
 
-	return repos
+	return repoNames
 }
 
 func (g GithubProvider) Delete(name string) {
@@ -50,6 +53,45 @@ func (g GithubProvider) Delete(name string) {
 		log.Fatal(err)
 	}
 	log.Infof("Successfully deleted repo: %v", name)
+}
+
+func (g GithubProvider) Execute(plan []tugboat.ExecutionPlan) {
+	for _, command := range plan {
+		command.Function(command.Arguments)
+	}
+}
+
+func (g GithubProvider) Plan(services []tugboat.Service) []tugboat.ExecutionPlan {
+	var repoExists bool
+	executionPlan := []tugboat.ExecutionPlan{}
+	repos := g.Retrieve()
+
+	for _, service := range services {
+		repoExists = false
+		localRepo := service.Name
+		if service.Repo != "" {
+			// Allow user to override convention
+			localRepo = service.Repo
+		}
+
+		for _, remoteRepo := range repos {
+			if localRepo == remoteRepo {
+				repoExists = true
+				break
+			}
+		}
+
+		if !repoExists {
+			executionPlan = append(
+				executionPlan,
+				tugboat.ExecutionPlan{
+					Function:  g.Create,
+					Arguments: localRepo,
+				})
+		}
+	}
+
+	return executionPlan
 }
 
 func CreateClient(ctx context.Context) github.Client {

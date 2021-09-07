@@ -10,19 +10,25 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type ExecutionPlan struct {
+	Function  func(string)
+	Arguments string
+}
+
 type Service struct {
 	Name      string `yaml:"name"`
-	Namespace bool   `yaml:"Namespace"`
+	Namespace string `yaml:"namespace"`
+	Repo      string `yaml:"repo"`
 	Template  string `yaml:"template,omitempty"`
 }
 
 type Provider interface {
 	Create(name string)
-	Retrieve() interface{}
+	Retrieve() []string
 	// Update()
 	Delete(name string)
-
-	// resolve()
+	Execute(plan []ExecutionPlan)
+	Plan(services []Service) []ExecutionPlan
 }
 
 func LoadServices(dir string) []Service {

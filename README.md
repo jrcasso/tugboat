@@ -8,6 +8,11 @@ Often times an organization will reach a scale where it becomes necessary to aut
 
 Tugboat envdeavors to automate this process for a number of supported services.
 
+## Design Principles
+
+- The Tugboat approach is that of convention over configuration; a consistent set of sensible defaults across providers is used.
+- Conventions need not impact flexibility - defaults may be overridden for each provider.
+
 # Development Setup
 
 Ensure you have the following prerequisites satisfied:

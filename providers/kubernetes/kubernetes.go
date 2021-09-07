@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/jrcasso/tugboat/tugboat"
 	log "github.com/sirupsen/logrus"
 
 	v1 "k8s.io/api/core/v1"
@@ -30,16 +31,18 @@ func (k KubernetesProvider) Create(name string) {
 	log.Infof("Successfully created namespace: %v", name)
 }
 
-func (k KubernetesProvider) Retrieve() interface{} {
+func (k KubernetesProvider) Retrieve() []string {
+	namespaceNames := []string{}
 	namespaces, err := k.Client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		log.Fatalf("Encountered error while listing namespaces: %+v", err)
 	}
 	for _, namespace := range namespaces.Items {
 		log.Debugf("Found namespace: %+v", namespace.ObjectMeta.Name)
+		namespaceNames = append(namespaceNames, namespace.ObjectMeta.Name)
 	}
 
-	return namespaces
+	return namespaceNames
 }
 
 func (k KubernetesProvider) Delete(name string) {
@@ -48,6 +51,47 @@ func (k KubernetesProvider) Delete(name string) {
 		log.Fatalf("Encountered error while listing namespaces: %+v", err)
 	}
 	log.Infof("Successfully deleted namespace: %v", name)
+}
+
+func (k KubernetesProvider) Execute(plan []tugboat.ExecutionPlan) {
+	for _, command := range plan {
+		command.Function(command.Arguments)
+	}
+}
+
+// func (k KubernetesProvider) Plan(service tugboat.Service) []func(name string) {
+func (k KubernetesProvider) Plan(services []tugboat.Service) []tugboat.ExecutionPlan {
+	// executionPlan := []func(name string){}
+	var namespaceExists bool
+	executionPlan := []tugboat.ExecutionPlan{}
+	namespaces := k.Retrieve()
+
+	for _, service := range services {
+		namespaceExists = false
+		localNamespace := service.Name
+		if service.Namespace != "" {
+			// Allow user to override convention
+			localNamespace = service.Namespace
+		}
+
+		for _, remoteNamespace := range namespaces {
+			if localNamespace == remoteNamespace {
+				namespaceExists = true
+				break
+			}
+		}
+
+		if !namespaceExists {
+			executionPlan = append(
+				executionPlan,
+				tugboat.ExecutionPlan{
+					Function:  k.Create,
+					Arguments: localNamespace,
+				})
+		}
+	}
+
+	return executionPlan
 }
 
 func CreateClient() *kubernetes.Clientset {

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"time"
 
 	"github.com/jrcasso/tugboat/providers/github"
 	"github.com/jrcasso/tugboat/providers/kubernetes"
@@ -21,6 +20,7 @@ func main() {
 	githubClient := github.CreateClient(ctx)
 	k8sClient := kubernetes.CreateClient()
 
+	// Make this allocation dynamic based out of LoadServices
 	providers := []tugboat.Provider{
 		kubernetes.KubernetesProvider{
 			Client:  k8sClient,
@@ -33,10 +33,15 @@ func main() {
 	}
 
 	for _, provider := range providers {
+		// Add concurrency
+		plan := provider.Plan(services)
+		log.Infof("Execution plan: %v", plan)
+		provider.Execute(plan)
+	}
+
+	// Cleanup
+	for _, provider := range providers {
 		for _, service := range services {
-			provider.Create(service.Name)
-			provider.Retrieve()
-			time.Sleep(3)
 			provider.Delete(service.Name)
 		}
 	}
