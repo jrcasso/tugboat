@@ -15,4 +15,4 @@ services:
       - KUBECONFIG=/root/.kube/config
     volumes:
       - go-tools:/go/bin
-      - ${KUBECONFIG}:/root/.kube/config:ro
+      - ${KUBECONFIG}:/root/.kube/:ro
