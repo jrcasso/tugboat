@@ -16,3 +16,5 @@ services:
     volumes:
       - go-tools:/go/bin
       - ${KUBECONFIG}:/root/.kube/:ro
+      - ~/.aws/:/root/.aws/:ro
+      - ~/.ssh/:/root/.ssh/:ro
