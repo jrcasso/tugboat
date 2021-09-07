@@ -35,11 +35,12 @@ func LoadServices(dir string) []Service {
 	}
 
 	log.Debugf("Found %+v files", len(files))
+	dnsRegex, _ := regexp.Compile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 	for _, file := range files {
 		config := processConfig(fmt.Sprintf("./%+v/%+v", dir, file.Name()))
 		log.Debugf("Found configuration: %+v", config)
 
-		matched, err := regexp.MatchString("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", config.Name)
+		matched := dnsRegex.MatchString(config.Name)
 		if err != nil {
 			log.Fatalf("Failed to enforce regex: %+v", err)
 		}
