@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -30,8 +31,11 @@ type Provider interface {
 	Plan(services []Service) []ExecutionPlan
 }
 
-func Execute(plan []ExecutionPlan) {
+func Execute(plan []ExecutionPlan, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	for _, command := range plan {
+		log.Infof("Executing plan: %v", plan)
 		command.Function(command.Arguments)
 	}
 }
