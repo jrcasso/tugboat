@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/jrcasso/tugboat/providers/github"
 	"github.com/jrcasso/tugboat/providers/kubernetes"
@@ -14,6 +15,7 @@ import (
 const SERVICE_DIR = "services"
 
 func main() {
+	start := time.Now()
 	initializeLogging()
 	var wg sync.WaitGroup
 	services := tugboat.LoadServices(SERVICE_DIR)
@@ -69,6 +71,8 @@ func main() {
 	log.Debugf("Waiting for cleanup to complete...")
 	wg.Wait()
 	log.Debugf("Cleanup completed!")
+	duration := time.Since(start)
+	log.Debugf("Execution took %v seconds", duration)
 }
 
 func initializeLogging() {
