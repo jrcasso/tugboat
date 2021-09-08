@@ -28,14 +28,13 @@ type Provider interface {
 	Retrieve() []string
 	// Update()
 	Delete(name string)
-	Plan(services []Service) []ExecutionPlan
+	Plan(services []Service, wg *sync.WaitGroup) []ExecutionPlan
 }
 
 func Execute(plan []ExecutionPlan, wg *sync.WaitGroup) {
 	defer wg.Done()
-
 	for _, command := range plan {
-		log.Infof("Executing plan: %v", plan)
+		log.Debugf("Executing plan: %v", plan)
 		command.Function(command.Arguments)
 	}
 }

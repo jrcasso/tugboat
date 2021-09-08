@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"os"
+	"sync"
 
 	"github.com/jrcasso/tugboat/tugboat"
 	log "github.com/sirupsen/logrus"
@@ -54,8 +55,8 @@ func (k KubernetesProvider) Delete(name string) {
 }
 
 // func (k KubernetesProvider) Plan(service tugboat.Service) []func(name string) {
-func (k KubernetesProvider) Plan(services []tugboat.Service) []tugboat.ExecutionPlan {
-	// executionPlan := []func(name string){}
+func (k KubernetesProvider) Plan(services []tugboat.Service, wg *sync.WaitGroup) []tugboat.ExecutionPlan {
+	defer wg.Done()
 	var namespaceExists bool
 	executionPlan := []tugboat.ExecutionPlan{}
 	namespaces := k.Retrieve()

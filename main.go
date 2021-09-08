@@ -36,30 +36,39 @@ func main() {
 	}
 
 	for _, provider := range providers {
-		plan := provider.Plan(services)
-		log.Infof("Generated execution plan: %v", plan)
-		plans = append(plans, plan)
+		wg.Add(1)
+		go func(provider tugboat.Provider, service []tugboat.Service) {
+			plan := provider.Plan(services, &wg)
+			log.Infof("Generated execution plan: %+v", plan)
+			plans = append(plans, plan)
+		}(provider, services)
 	}
+	log.Debugf("Waiting for execution planning to complete...")
+	wg.Wait()
+	log.Debugf("Planning completed!")
 
 	for _, plan := range plans {
 		wg.Add(1)
 		go tugboat.Execute(plan, &wg)
 	}
+	log.Debugf("Waiting for plan execution to complete...")
+	wg.Wait()
+	log.Debugf("Plan execution completed!")
 
 	// Cleanup
-	wg.Wait()
 	for _, provider := range providers {
 		for _, service := range services {
 			wg.Add(1)
-			go func(service tugboat.Service) {
+			go func(provider tugboat.Provider, service tugboat.Service) {
 				defer wg.Done()
 				log.Infof("Cleaning up %v", service.Name)
 				provider.Delete(service.Name)
-			}(service)
+			}(provider, service)
 		}
 	}
+	log.Debugf("Waiting for cleanup to complete...")
 	wg.Wait()
-	log.Infof("Finished cleanup!")
+	log.Debugf("Cleanup completed!")
 }
 
 func initializeLogging() {

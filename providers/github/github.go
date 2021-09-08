@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"os"
+	"sync"
 
 	"github.com/google/go-github/github"
 	"github.com/jrcasso/tugboat/tugboat"
@@ -55,7 +56,8 @@ func (g GithubProvider) Delete(name string) {
 	log.Infof("Successfully deleted repo: %v", name)
 }
 
-func (g GithubProvider) Plan(services []tugboat.Service) []tugboat.ExecutionPlan {
+func (g GithubProvider) Plan(services []tugboat.Service, wg *sync.WaitGroup) []tugboat.ExecutionPlan {
+	defer wg.Done()
 	var repoExists bool
 	executionPlan := []tugboat.ExecutionPlan{}
 	repos := g.Retrieve()
