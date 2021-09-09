@@ -24,9 +24,6 @@ type Service struct {
 }
 
 type Provider interface {
-	Create(name string)
-	Retrieve() []string
-	// Update()
 	Delete(name string)
 	Plan(services []Service, wg *sync.WaitGroup) []ExecutionPlan
 }

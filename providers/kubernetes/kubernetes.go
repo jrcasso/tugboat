@@ -23,7 +23,7 @@ type KubernetesProvider struct {
 	Context *context.Context
 }
 
-func (k KubernetesProvider) Create(name string) {
+func (k KubernetesProvider) create(name string) {
 	namespace := v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
 	_, err := k.Client.CoreV1().Namespaces().Create(context.TODO(), &namespace, metav1.CreateOptions{})
 	if err != nil {
@@ -32,7 +32,7 @@ func (k KubernetesProvider) Create(name string) {
 	log.Infof("Successfully created namespace: %v", name)
 }
 
-func (k KubernetesProvider) Retrieve() []string {
+func (k KubernetesProvider) retrieve() []string {
 	namespaceNames := []string{}
 	namespaces, err := k.Client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -59,7 +59,7 @@ func (k KubernetesProvider) Plan(services []tugboat.Service, wg *sync.WaitGroup)
 	defer wg.Done()
 	var namespaceExists bool
 	executionPlan := []tugboat.ExecutionPlan{}
-	namespaces := k.Retrieve()
+	namespaces := k.retrieve()
 
 	// Check if it should be created
 	for _, service := range services {
@@ -78,7 +78,7 @@ func (k KubernetesProvider) Plan(services []tugboat.Service, wg *sync.WaitGroup)
 			executionPlan = append(
 				executionPlan,
 				tugboat.ExecutionPlan{
-					Function:  k.Create,
+					Function:  k.create,
 					Arguments: localNamespace,
 				})
 		}

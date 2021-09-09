@@ -21,7 +21,7 @@ type GithubProvider struct {
 	Context *context.Context
 }
 
-func (g GithubProvider) Create(name string) {
+func (g GithubProvider) create(name string) {
 	repo := &github.Repository{
 		Name:        github.String(name),
 		Private:     github.Bool(true),
@@ -34,7 +34,7 @@ func (g GithubProvider) Create(name string) {
 	log.Infof("Successfully created repo: %v", repo.GetName())
 }
 
-func (g GithubProvider) Retrieve() []string {
+func (g GithubProvider) retrieve() []string {
 	repoNames := []string{}
 	repos, _, err := g.Client.Repositories.ListByOrg(*g.Context, os.Getenv("GITHUB_ORGANIZATION"), nil)
 	if err != nil {
@@ -60,7 +60,7 @@ func (g GithubProvider) Plan(services []tugboat.Service, wg *sync.WaitGroup) []t
 	defer wg.Done()
 	var repoExists bool
 	executionPlan := []tugboat.ExecutionPlan{}
-	repos := g.Retrieve()
+	repos := g.retrieve()
 
 	for _, service := range services {
 		repoExists = false
@@ -78,7 +78,7 @@ func (g GithubProvider) Plan(services []tugboat.Service, wg *sync.WaitGroup) []t
 			executionPlan = append(
 				executionPlan,
 				tugboat.ExecutionPlan{
-					Function:  g.Create,
+					Function:  g.create,
 					Arguments: localRepo,
 				})
 		}
