@@ -64,7 +64,7 @@ func main() {
 			go func(provider tugboat.Provider, service tugboat.Service) {
 				defer wg.Done()
 				log.Infof("Cleaning up %v", service.Name)
-				provider.Delete(service.Name)
+				provider.Delete(service)
 			}(provider, service)
 		}
 	}

@@ -48,12 +48,12 @@ func (g GithubProvider) retrieve() []string {
 	return repoNames
 }
 
-func (g GithubProvider) Delete(name string) {
-	_, err := g.Client.Repositories.Delete(*g.Context, os.Getenv("GITHUB_ORGANIZATION"), name)
+func (g GithubProvider) Delete(service tugboat.Service) {
+	_, err := g.Client.Repositories.Delete(*g.Context, os.Getenv("GITHUB_ORGANIZATION"), service.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Infof("Successfully deleted repo: %v", name)
+	log.Infof("Successfully deleted repo: %v", service.Name)
 }
 
 func (g GithubProvider) Plan(services []tugboat.Service, wg *sync.WaitGroup) []tugboat.ExecutionPlan {

@@ -46,12 +46,12 @@ func (k KubernetesProvider) retrieve() []string {
 	return namespaceNames
 }
 
-func (k KubernetesProvider) Delete(name string) {
-	err := k.Client.CoreV1().Namespaces().Delete(context.TODO(), name, metav1.DeleteOptions{})
+func (k KubernetesProvider) Delete(service tugboat.Service) {
+	err := k.Client.CoreV1().Namespaces().Delete(context.TODO(), service.Name, metav1.DeleteOptions{})
 	if err != nil {
 		log.Fatalf("Encountered error while listing namespaces: %+v", err)
 	}
-	log.Infof("Successfully deleted namespace: %v", name)
+	log.Infof("Successfully deleted namespace: %v", service.Name)
 }
 
 // func (k KubernetesProvider) Plan(service tugboat.Service) []func(name string) {
